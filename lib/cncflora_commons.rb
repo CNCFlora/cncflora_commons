@@ -8,21 +8,45 @@ end
 
 def http_post(uri,doc) 
     uri = URI.parse(uri)
-    header = {'Content-Type'=> 'application/json'}
     http = Net::HTTP.new(uri.host, uri.port)
+
+    if doc.class == Hash
+        header = { 'Content-Type' => 'application/json' }
+    elsif
+        header = { 'Content-Type' => 'application/x-www-form-urlencoded' }
+    end
+
     request = Net::HTTP::Post.new(uri.request_uri, header)
-    request.body = doc.to_json
     response = http.request(request)
+
+    if doc.class == Hash
+        request.body = doc.to_json
+    elsif
+       request.body = doc
+    end
+    
     JSON.parse(response.body)
 end
 
 def http_put(uri,doc) 
     uri = URI.parse(uri)
-    header = {'Content-Type'=> 'application/json'}
     http = Net::HTTP.new(uri.host, uri.port)
+
+    if doc.class == Hash
+        header = { 'Content-Type' => 'application/json' }
+    elsif
+	    header = { 'Content-Type' => 'application/x-www-form-urlencoded' }
+    end
+ 	
     request = Net::HTTP::Put.new(uri.request_uri, header)
-    request.body = doc.to_json
     response = http.request(request)
+
+    if doc.class == Hash
+    	request.body = doc.to_json
+    elsif
+	   request.body = doc
+    end
+    
     JSON.parse(response.body)
 end
 
