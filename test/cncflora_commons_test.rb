@@ -6,13 +6,53 @@ etcd = 'http://localhost:4001/v2/keys'
 
 describe "CNCFlora Common functions" do
 
+<<<<<<< HEAD
     
     it "Send http put" do
         hash_config = http_put( "#{etcd}/message","value=Hello world." )
         expect( hash_config['action'] ).to eq( 'set' )
         expect( hash_config['node']['value'] ).to eq( 'Hello world.' )
         http_delete( "#{etcd}/message" )
+=======
+
+    it "Send request put." do
+    	request = http_put( "#{etcd}/v2/keys/foo", "value=bar" )
+    	puts "request = #{request}"
+    	expect( request['action'] ).to eq( 'set' )
+    	expect( request['node']['key'] ).to eq( '/foo' )    	
+    	#expect( request['node']['value'] ).to eq( 'bar' )
+    	http_delete( "#{etcd}/v2/keys/foo/" )
     end
+
+
+    it "Send request delete." do
+    	http_put( "#{etcd}/v2/keys/foo", "value=test123" )
+    	request = http_delete( "#{etcd}/v2/keys/foo/" )
+    	puts "request = #{request}"
+    	expect( request['action'] ).to eq( 'delete' )
+    	expect( request['node']['key'] ).to eq( '/foo' )
+    end
+
+    it "Send request get." do
+    	http_put( "#{etcd}/v2/keys/foo", "value=test123" )
+    	request = http_get( "#{etcd}/v2/keys/foo/" )
+    	puts "request = #{request}"
+    	expect( request['action'] ).to eq( 'get' )
+    	expect( request['node']['key'] ).to eq( '/foo' )
+    end
+
+=begin
+    it "Send request post." do
+    	request = http_post( "#{etcd}/v2/keys/foo", {} )
+    	puts "request = #{request}"
+    	expect( request['action'] ).to eq( 'create' )
+    	expect( request['node']['key'] ).to eq( '/foo' )
+    	http_delete( "#{etcd}/v2/keys/foo?recursive=true" )
+>>>>>>> 94dd5862db080e3358edf8a17b1228b0ca6d55fd
+    end
+=end
+
+
 
     it "Send http get" do
         http_put( "#{etcd}/foo","value=bar" )
