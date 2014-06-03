@@ -11,7 +11,6 @@ def http_post(uri,doc)
     http = Net::HTTP.new(uri.host, uri.port)
 
     if doc.class == Hash
-<<<<<<< HEAD
         header = {'Content-Type'=> 'application/json'}
     elsif doc.class == String
         header = {'Content-Type'=> 'application/x-www-form-urlencoded'}
@@ -25,22 +24,7 @@ def http_post(uri,doc)
         request.body = doc
     end
 
-=======
-        header = { 'Content-Type' => 'application/json' }
-    elsif
-        header = { 'Content-Type' => 'application/x-www-form-urlencoded' }
-    end
-
-    request = Net::HTTP::Post.new(uri.request_uri, header)
->>>>>>> 94dd5862db080e3358edf8a17b1228b0ca6d55fd
     response = http.request(request)
-
-    if doc.class == Hash
-        request.body = doc.to_json
-    elsif
-       request.body = doc
-    end
-    
     JSON.parse(response.body)
 end
 
@@ -48,8 +32,6 @@ def http_put(uri,doc)
     uri = URI.parse(uri)
     http = Net::HTTP.new(uri.host, uri.port)
 
-<<<<<<< HEAD
-
     if doc.class == Hash
         header = {'Content-Type'=> 'application/json'}
     elsif doc.class == String
@@ -64,23 +46,7 @@ def http_put(uri,doc)
         request.body = doc
     end
 
-=======
-    if doc.class == Hash
-        header = { 'Content-Type' => 'application/json' }
-    elsif
-	    header = { 'Content-Type' => 'application/x-www-form-urlencoded' }
-    end
- 	
-    request = Net::HTTP::Put.new(uri.request_uri, header)
->>>>>>> 94dd5862db080e3358edf8a17b1228b0ca6d55fd
     response = http.request(request)
-
-    if doc.class == Hash
-    	request.body = doc.to_json
-    elsif
-	   request.body = doc
-    end
-    
     JSON.parse(response.body)
 end
 
@@ -102,21 +68,21 @@ def search(index,query)
     result
 end
 
-def etcd2config(server)
-    config = {:etcd=>server}
-    if config[:etcd]
-        etcd = http_get("#{config[:etcd]}/?recursive=true") 
-        etcd['node']['nodes'].each {|node|
-            if node.has_key?('nodes')
-                node['nodes'].each {|entry|
-                    if entry.has_key?('value') && entry['value'].length >= 1 
-                        key = entry['key'].gsub("/","_").gsub("-","_").downcase()[1..-1]
-                        config[key.to_sym] = entry['value']
-                    end
-                }
-            end
+def flatten(obj)
+    flat = {}
+    if obj["dir"] then
+        obj["nodes"].each { |n|
+            flat = flat.merge(flatten(n))
         }
+    else
+        key = obj["key"].gsub("/","_").gsub("-","_")
+        flat[key[1..key.length].to_sym]=obj["value"]
     end
+        flat
+end
+
+def etcd2config(server)
+    config = flatten( http_get("#{server}/?recursive=true")["node"] )
     config
 end
 
