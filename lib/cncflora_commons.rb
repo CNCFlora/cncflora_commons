@@ -71,7 +71,7 @@ end
 
 def flatten(obj)
     flat = {}
-    if obj["dir"] then
+    if obj["dir"] && obj["nodes"] then
         obj["nodes"].each { |n|
             flat = flat.merge(flatten(n))
         }
