@@ -47,6 +47,7 @@ def http_put(uri,doc)
     end
 
     response = http.request(request)
+
     JSON.parse(response.body)
 end
 
@@ -82,7 +83,7 @@ def flatten(obj)
 end
 
 def etcd2config(server)
-    config = flatten( http_get("#{server}/?recursive=true")["node"] )
+    config = flatten( http_get("#{server}/v2/keys/?recursive=true")["node"] )
     config
 end
 

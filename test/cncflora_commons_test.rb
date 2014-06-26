@@ -54,7 +54,7 @@ describe "CNCFlora Common functions" do
         http_put( "#{etcd}/proj1/host","value=host1" )
         http_put( "#{etcd}/proj1/ip","value=ip1" )
         http_put( "#{etcd}/proj2/host","value=host2" )
-        config = etcd2config(etcd)
+        config = etcd2config("http://localhost:4001")
         config.should include(:proj1_host=>"host1",:proj1_ip=>"ip1",:proj2_host=>"host2",:language=>"pt",:dwc_services=>"dwc")
         http_delete( "#{etcd}/proj1?recursive=true" )
         http_delete( "#{etcd}/proj2?recursive=true" )
