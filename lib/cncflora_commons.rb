@@ -82,20 +82,56 @@ def flatten(obj)
         flat
 end
 
-def etcd2config(server)
+def etcd2config(server,prefix="")
     config = flatten( http_get("#{server}/v2/keys/?recursive=true")["node"] )
     config.keys.each {|k|
-        if k.to_s.end_with? "_url" then
-            config[k.to_s.gsub("_url","").to_sym] = config[k]
+        if k.to_s.start_with?(prefix) && k.to_s.end_with?("_url") then
+            config[k.to_s.gsub(prefix,"").gsub("_url","").to_sym] = config[k]
         end
     }
     config
 end
 
-def etcd2settings(server)
-    config = etcd2config(server)
+def etcd2settings(server,prefix="")
+    config = etcd2config(server,prefix)
     config.keys.each { |key| set key, config[key] }
     set :config, config
     config
+end
+
+def setup(file)
+    config_file file
+
+    use Rack::Session::Pool
+    set :session_secret, '1flora2'
+    set :views, 'src/views'
+
+    if ENV["DB"] then
+        set :db, ENV["DB"]
+    end
+
+    if ENV["CONTEXT"] then
+        set :context, ENV["CONTEXT"]
+    end
+
+    if ENV["PREFIX"] then
+        set :prefix, ENV["PREFIX"]
+    else
+        set :prefix, ""
+    end
+
+    if settings.prefix.length >= 1 then
+        set :prefix, "#{settings.prefix}_"
+    end
+
+    config = etcd2settings(ENV["ETCD"] || settings.etcd,settings.prefix)
+
+    config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
+    config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
+    config[:couchdb] = "#{ config[:datahub] }/#{settings.db}"
+    config[:base] = settings.base
+    config[:context] = settings.context
+
+    config.keys.each { |key| set key, config[key] }
 end
 
