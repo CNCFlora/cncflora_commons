@@ -85,7 +85,7 @@ end
 def etcd2config(server,prefix="")
     config = flatten( http_get("#{server}/v2/keys/?recursive=true")["node"] )
     config.keys.each {|k|
-        if k.to_s.start_with?(prefix) && k.to_s.end_with?("_url") then
+        if k.to_s.end_with?("_url") then
             config[k.to_s.gsub(prefix,"").gsub("_url","").to_sym] = config[k]
         end
     }
