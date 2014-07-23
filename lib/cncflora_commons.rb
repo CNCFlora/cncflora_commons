@@ -130,11 +130,7 @@ def setup(file)
     config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
     config[:couchdb] = "#{ config[:datahub] }/#{settings.db}"
     config[:context] = settings.context
-    if settings.prefix.length >= 1 then
-        config[:base] = "#{settings.prefix}_#{settings.base}"
-    else
-        config[:base] = settings.base
-    end
+    config[:base] = settings.base
 
     config.keys.each { |key| set key, config[key] }
 end
