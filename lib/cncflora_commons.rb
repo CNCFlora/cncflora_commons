@@ -120,6 +120,10 @@ def setup(file)
         set :prefix, ""
     end
 
+    if ENV["BASE"] then
+        set :base, ENV["BASE"]
+    end
+
     if settings.prefix.length >= 1 then
         set :prefix, "#{settings.prefix}_"
     end
