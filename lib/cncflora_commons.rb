@@ -129,8 +129,12 @@ def setup(file)
     config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
     config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
     config[:couchdb] = "#{ config[:datahub] }/#{settings.db}"
-    config[:base] = settings.base
     config[:context] = settings.context
+    if settings.prefix.length >= 1 then
+        config[:base] = "#{settings.prefix}_#{settings.base}"
+    else
+        config[:base] = settings.base
+    end
 
     config.keys.each { |key| set key, config[key] }
 end
