@@ -130,11 +130,29 @@ def setup(file)
 
     config = etcd2settings(ENV["ETCD"] || settings.etcd,settings.prefix)
 
-    config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
-    config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
-    config[:couchdb] = "#{ config[:datahub] }/#{settings.db}"
-    config[:context] = settings.context
-    config[:base] = settings.base
+    if settings.lang then
+        config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
+    end
+
+    if !config.has_key :elasticsearch then
+        config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
+    else
+        config[:elasticsearch] = "#{config[:elasticsearch]}/#{settings.db}"
+    end
+
+    if !config.has_key :couchdb then
+        config[:couchdb] = "#{config[:datahub]}/#{settings.db}"
+    else
+        config[:couchdb] = "#{config[:couchdb]}/#{settings.db}"
+    end
+
+    if settings.context then
+        config[:context] = settings.context
+    end
+
+    if settings.base then
+        config[:base] = settings.base
+    end
 
     config.keys.each { |key| set key, config[key] }
 end
