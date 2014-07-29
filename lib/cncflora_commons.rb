@@ -134,13 +134,13 @@ def setup(file)
         config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
     end
 
-    if !config.has_key :elasticsearch then
+    if !config.has_key? :elasticsearch then
         config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
     else
         config[:elasticsearch] = "#{config[:elasticsearch]}/#{settings.db}"
     end
 
-    if !config.has_key :couchdb then
+    if !config.has_key? :couchdb then
         config[:couchdb] = "#{config[:datahub]}/#{settings.db}"
     else
         config[:couchdb] = "#{config[:couchdb]}/#{settings.db}"
