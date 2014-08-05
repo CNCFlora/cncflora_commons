@@ -92,13 +92,6 @@ def etcd2config(server,prefix="")
     config
 end
 
-def etcd2settings(server,prefix="")
-    config = etcd2config(server,prefix)
-    config.keys.each { |key| set key, config[key] }
-    set :config, config
-    config
-end
-
 def setup(file)
     config_file file
 
@@ -108,10 +101,14 @@ def setup(file)
 
     if ENV["DB"] then
         set :db, ENV["DB"]
+    else
+        set :db, "cncflora"
     end
 
     if ENV["CONTEXT"] then
         set :context, ENV["CONTEXT"]
+    else
+        set :context, "connect"
     end
 
     if ENV["PREFIX"] then
@@ -122,28 +119,46 @@ def setup(file)
 
     if ENV["BASE"] then
         set :base, ENV["BASE"]
+    else
+        set :base, ""
     end
 
     if settings.prefix.length >= 1 then
         set :prefix, "#{settings.prefix}_"
     end
 
-    config = etcd2settings(ENV["ETCD"] || settings.etcd,settings.prefix)
+    if ENV["ETCD_PORT_4001_TCP_ADDR"] then
+        set :etcd, "http://#{ENV["ETCD_PORT_4001_TCP_ADDR"]}:#{ENV["ETCD_PORT_4001_TCP_PORT"]}"
+    elsif ENV["ETCD"] then
+        set :etcd, ENV["ETCD"]
+    end
+
+    @config = etcd2config(settings.etcd,settings.prefix)
+
+    onchange(settings.etcd,settings.prefix) do |newconfig|
+        @config = newconfig
+        setup! newconfig
+    end
+
+    setup! @config
+end
+
+def setup!(config)
 
     if settings.lang then
         config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
     end
 
-    if !config.has_key? :elasticsearch then
-        config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
-    else
+    if config.has_key? :elasticsearch then
         config[:elasticsearch] = "#{config[:elasticsearch]}/#{settings.db}"
+    else
+        config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
     end
 
-    if !config.has_key? :couchdb then
-        config[:couchdb] = "#{config[:datahub]}/#{settings.db}"
-    else
+    if config.has_key? :couchdb then
         config[:couchdb] = "#{config[:couchdb]}/#{settings.db}"
+    else
+        config[:couchdb] = "#{config[:datahub]}/#{settings.db}"
     end
 
     if settings.context then
@@ -155,5 +170,21 @@ def setup(file)
     end
 
     config.keys.each { |key| set key, config[key] }
+
+    config
+end
+
+def onchange(etcd,prefix="")
+    @last = ""
+    Thread.new do
+        while true do
+            actual = Net::HTTP.get(URI("#{ etcd }/v2/keys/?recursive=true"))
+            if actual != @last then
+                yield etcd2config(etcd,prefix)
+                @last = actual
+            end
+            sleep 4
+        end
+    end
 end
 

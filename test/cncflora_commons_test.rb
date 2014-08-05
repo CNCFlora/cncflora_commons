@@ -5,7 +5,6 @@ etcd = 'http://localhost:4001/v2/keys'
 
 describe "CNCFlora Common functions" do
 
-
     it "Send put request." do
     	request = http_put( "#{etcd}/foo", "value=bar" )
     	expect( request['action'] ).to eq( 'set' )
@@ -30,7 +29,6 @@ describe "CNCFlora Common functions" do
     	expect( request['node']['key'] ).to eq( '/foo' )
     end
 
-
     it "Send get request." do
     	http_put( "#{etcd}/foo", "value=bar" )
     	request = http_get( "#{etcd}/foo" )
@@ -47,7 +45,6 @@ describe "CNCFlora Common functions" do
     	request = http_delete( "#{etcd}/foo?recursive=true" )
     end
 
-
     it "Can read etcd config" do
         http_put( "#{etcd}/language","value=pt" )
         http_put( "#{etcd}/dwc-services","value=dwc" )
@@ -60,6 +57,19 @@ describe "CNCFlora Common functions" do
         http_delete( "#{etcd}/proj1?recursive=true" )
         http_delete( "#{etcd}/proj2?recursive=true" )
         http_delete( "#{etcd}/language" )
+        http_delete( "#{etcd}/dwc-services" )
+    end
+
+    it "Can reread etcd" do
+        http_put( "#{etcd}/dwc-services","value=dwc" )
+        @config = {}
+        #etcd2config("http://localhost:4001")
+        onchange("http://localhost:4001") {|newcfg| @config = newcfg}
+        sleep 6
+        expect(@config).to include(:dwc_services=>"dwc")
+        http_put( "#{etcd}/dwc-services","value=dwc2" )
+        sleep 6
+        expect(@config).to include(:dwc_services=>"dwc2")
         http_delete( "#{etcd}/dwc-services" )
     end
 
