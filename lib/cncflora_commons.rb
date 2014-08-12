@@ -131,6 +131,8 @@ def setup(file)
         set :etcd, "http://#{ENV["ETCD_PORT_4001_TCP_ADDR"]}:#{ENV["ETCD_PORT_4001_TCP_PORT"]}"
     elsif ENV["ETCD"] then
         set :etcd, ENV["ETCD"]
+    else
+        set :etcd, "http://localhost:4001"
     end
 
     @config = etcd2config(settings.etcd,settings.prefix)
@@ -170,6 +172,8 @@ def setup!(config)
     end
 
     config.keys.each { |key| set key, config[key] }
+
+    set :config, config
 
     config
 end

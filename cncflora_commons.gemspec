@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
     s.name        = "cncflora_commons"
-    s.version     = "0.0.13"
+    s.version     = "0.0.15"
     s.date        = "2014-05-23"
     s.summary     = "CNCFlora common functions"
     s.description = "HTTP, etcd..."
