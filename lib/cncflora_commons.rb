@@ -63,9 +63,13 @@ def search(index,query)
     query="scientificName:'Aphelandra longiflora'" unless query != nil && query.length > 0
     result = []
     r = http_get("#{settings.elasticsearch}/#{index}/_search?size=999&q=#{URI.encode(query)}")
-    r['hits']['hits'].each{|hit|
-        result.push(hit["_source"])
-    }
+    if r['hist'] && r['hits']['hits'] then
+        r['hits']['hits'].each{|hit|
+            result.push(hit["_source"])
+        }
+    else
+        puts "search error #{r}"
+    end
     result
 end
 
@@ -174,6 +178,9 @@ def setup!(config)
     config.keys.each { |key| set key, config[key] }
 
     set :config, config
+
+    puts "Config loaded"
+    puts config
 
     config
 end
