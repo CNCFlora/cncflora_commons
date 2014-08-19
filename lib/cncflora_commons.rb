@@ -186,15 +186,10 @@ def setup!(config)
 end
 
 def onchange(etcd,prefix="")
-    @last = ""
     Thread.new do
         while true do
-            actual = Net::HTTP.get(URI("#{ etcd }/v2/keys/?recursive=true"))
-            if actual != @last then
-                yield etcd2config(etcd,prefix)
-                @last = actual
-            end
-            sleep 4
+            http_get("#{ etcd }/v2/keys/?recursive=true&wait=true")
+            yield etcd2config(etcd,prefix)
         end
     end
 end
