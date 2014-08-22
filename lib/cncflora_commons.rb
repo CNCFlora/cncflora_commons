@@ -105,8 +105,6 @@ def setup(file)
 
     if ENV["DB"] then
         set :db, ENV["DB"]
-    else
-        set :db, "cncflora"
     end
 
     if ENV["CONTEXT"] then
