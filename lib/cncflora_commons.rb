@@ -99,10 +99,6 @@ end
 def setup(file)
     config_file file
 
-    use Rack::Session::Pool
-    set :session_secret, '1flora2'
-    set :views, 'src/views'
-
     if ENV["DB"] then
         set :db, ENV["DB"]
     end
@@ -133,6 +129,7 @@ def setup(file)
         set :etcd, "http://#{ENV["ETCD_PORT_4001_TCP_ADDR"]}:#{ENV["ETCD_PORT_4001_TCP_PORT"]}"
     elsif ENV["ETCD"] then
         set :etcd, ENV["ETCD"]
+    elsif settings.etcd then
     else
         set :etcd, "http://localhost:4001"
     end
@@ -143,6 +140,11 @@ def setup(file)
         @config = newconfig
         setup! newconfig
     end
+
+    use Rack::Session::Pool
+
+    set :session_secret, '1flora2'
+    set :views, 'src/views'
 
     setup! @config
 end
