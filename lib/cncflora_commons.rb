@@ -155,6 +155,10 @@ def setup!(config)
         config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
     end
 
+    if ENV["DATAHUB_PORT_4001_TCP_ADDR"] then
+        config[:datahub] = "http://#{ENV["DATAHUB_PORT_8080_TCP_ADDR"]}:#{ENV["DATAHUB_PORT_8080_TCP_PORT"]}"
+    end
+
     if config.has_key? :elasticsearch then
         config[:elasticsearch] = "#{config[:elasticsearch]}/#{settings.db}"
     else
