@@ -59,10 +59,10 @@ def http_delete(uri)
     JSON.parse(response.body)
 end
 
-def search(index,query)
+def search(db,index,query)
     query="scientificName:'Aphelandra longiflora'" unless query != nil && query.length > 0
     result = []
-    r = http_get("#{settings.elasticsearch}/#{index}/_search?size=999&q=#{URI.encode(query)}")
+    r = http_get("#{settings.elasticsearch}/#{db}/#{index}/_search?size=999&q=#{URI.encode(query)}")
     if r['hits'] && r['hits']['hits'] then
         r['hits']['hits'].each{|hit|
             result.push(hit["_source"])
@@ -155,20 +155,20 @@ def setup!(config)
         config[:strings] = JSON.parse(File.read("src/locales/#{settings.lang}.json", :encoding => "BINARY"))
     end
 
-    if ENV["DATAHUB_PORT_4001_TCP_ADDR"] then
+    if ENV["DATAHUB_PORT_8080_TCP_ADDR"] then
         config[:datahub] = "http://#{ENV["DATAHUB_PORT_8080_TCP_ADDR"]}:#{ENV["DATAHUB_PORT_8080_TCP_PORT"]}"
     end
 
     if config.has_key? :elasticsearch then
-        config[:elasticsearch] = "#{config[:elasticsearch]}/#{settings.db}"
+        config[:elasticsearch] = "#{config[:elasticsearch]}"
     else
-        config[:elasticsearch] = "#{config[:datahub]}/#{settings.db}"
+        config[:elasticsearch] = "#{config[:datahub]}"
     end
 
     if config.has_key? :couchdb then
-        config[:couchdb] = "#{config[:couchdb]}/#{settings.db}"
+        config[:couchdb] = "#{config[:couchdb]}"
     else
-        config[:couchdb] = "#{config[:datahub]}/#{settings.db}"
+        config[:couchdb] = "#{config[:datahub]}"
     end
 
     if settings.context then
