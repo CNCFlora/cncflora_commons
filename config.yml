@@ -1,0 +1,6 @@
+development:
+  test: "Hello, $name."
+  foo: "bar"
+test:
+  test: "Hello, $name."
+  foo: "baz"
