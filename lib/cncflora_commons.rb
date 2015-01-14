@@ -77,24 +77,36 @@ end
 def setup(file)
     #config_file file
 
-    config = YAML.load_file(file)[ENV['RACK_ENV'] || 'development']
+    @config = YAML.load_file(file)[ENV['RACK_ENV'] || 'development']
 
-    config.each {|ck,cv|
+    if @config["etcd"] || ENV["ETCD"] then
+      etcd_cfg = etcd2config(@config["etcd"] || ENV["ETCD"])
+      onchange(@config["etcd"] || ENV["ETCD"]) do |newconfig|
+        newconfig.each {|k,v| @config[k] = v }
+        if defined? settings then
+          newconfig.each {|k,v| set k.to_sym,v }
+        end
+      end
+      etcd_cfg.each {|k,v| @config[k] = v }
+    end
+
+    @config.each {|ck,cv|
       ENV.each {|ek,ev|
         if cv =~ /\$#{ek}/ then
-          config[ck] = cv.gsub(/\$#{ek}/,ev)
+          @config[ck] = cv.gsub(/\$#{ek}/,ev)
         end
       }
     }
 
-    ENV.each {|k,v| config[k]=v }
+    ENV.each {|k,v| @config[k]=v }
 
-    if config["lang"] then
-        config["strings"] = JSON.parse(File.read("src/locales/#{config["lang"]}.json", :encoding => "BINARY"))
+    if @config["lang"] then
+        @config["strings"] = JSON.parse(File.read("src/locales/#{@config["lang"]}.json", :encoding => "BINARY"))
     end
 
     if defined? settings then
-      config.each {|k,v| set k.to_sym,v }
+      @config.each {|k,v| set k.to_sym,v }
+      set :@config, @config
 
       use Rack::Session::Pool
 
@@ -102,9 +114,51 @@ def setup(file)
       set :views, 'src/views'
     end
 
-    puts "Config loaded"
-    puts config
+    puts "@config loaded"
+    puts @config
 
-    config
+    @config
 end
 
+def flatten(obj)
+  flat = {}
+  if obj["dir"] && obj["nodes"] then
+    obj["nodes"].each { |n|
+      flat = flat.merge(flatten(n))
+    }
+  else
+    key = obj["key"].gsub("/","_").gsub("-","_")
+    flat[key[1..key.length]]=obj["value"]
+  end
+  flat
+end
+
+def etcd2config(server)
+  cfg = flatten( http_get("#{server}/v2/keys/?recursive=true")["node"] )
+  to_add={}
+  cfg.each {|k,v|
+    if k.match(/_port$/) then
+      name = /(\w+)_port/.match(k).captures[0]
+      ip   = cfg["#{name}_networksettings_ipaddress"]
+      port = 80
+      cfg.each {|kk,vv|
+        if /^#{name}_networksettings/.match(kk) && vv == v then 
+          port = /ports_(\d+)_tcp/.match(kk).captures[0] 
+        end
+      }
+      to_add[name] = "http://#{ip}:#{port}"
+    end
+  }
+  to_add.each{|k,v| cfg[k]=v}
+  cfg
+end
+
+def onchange(etcd)
+  Thread.new do
+    while true do
+      a = http_get("#{etcd}/v2/keys/?recursive=true&wait=true")
+      puts "etcd updated"
+      yield etcd2config(etcd)
+    end
+  end
+end
