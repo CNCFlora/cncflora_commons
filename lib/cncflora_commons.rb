@@ -106,7 +106,7 @@ def setup(file)
 
     if defined? settings then
       @config.each {|k,v| set k.to_sym,v }
-      set :@config, @config
+      set :config, @config
 
       use Rack::Session::Pool
 
