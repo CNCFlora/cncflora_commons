@@ -79,17 +79,6 @@ def setup(file)
 
     @config = YAML.load_file(file)[ENV['RACK_ENV'] || 'development']
 
-    if @config["etcd"] || ENV["ETCD"] then
-      etcd_cfg = etcd2config(@config["etcd"] || ENV["ETCD"])
-      onchange(@config["etcd"] || ENV["ETCD"]) do |newconfig|
-        newconfig.each {|k,v| @config[k] = v }
-        if defined? settings then
-          newconfig.each {|k,v| set k.to_sym,v }
-        end
-      end
-      etcd_cfg.each {|k,v| @config[k] = v }
-    end
-
     @config.each {|ck,cv|
       ENV.each {|ek,ev|
         if cv =~ /\$#{ek}/ then
@@ -97,6 +86,17 @@ def setup(file)
         end
       }
     }
+
+    if ENV["ETCD"] || @config["etcd"]  then
+      etcd_cfg = etcd2config(ENV["ETCD"] || @config["etcd"])
+      onchange(ENV["ETCD"] || @config["etcd"]) do |newconfig|
+        newconfig.each {|k,v| @config[k] = v }
+        if defined? settings then
+          newconfig.each {|k,v| set k.to_sym,v }
+        end
+      end
+      etcd_cfg.each {|k,v| @config[k] = v }
+    end
 
     ENV.each {|k,v| @config[k]=v }
 
