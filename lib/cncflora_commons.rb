@@ -62,8 +62,9 @@ end
 
 def search(db,index,query)
     query="scientificName:'Aphelandra longiflora'" unless query != nil && query.length > 0
+    query_json={"query"=>{"query_string"=>{"query"=>query}}}
     result = []
-    r = http_get("#{settings.elasticsearch}/#{db}/#{index}/_search?size=999&q=#{URI.encode(query)}")
+    r = http_post("#{settings.elasticsearch}/#{db}/#{index}/_search?size=999",query_json)
     if r['hits'] && r['hits']['hits'] then
         r['hits']['hits'].each{|hit|
             result.push(hit["_source"])
